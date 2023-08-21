@@ -108,7 +108,8 @@ export const LoginScreen = () => {
       <Spinner visible={spinner} />
       <TouchableOpacity
         onPress={() => navigation.navigate('Register')}
-        style={{paddingVertical: 10, marginLeft: '80%'}}>
+        style={{paddingVertical: 0, marginLeft: '80%'}}
+        >
         <Label styles={{fontSize: 20, color: 'orange'}} title="Register" />
       </TouchableOpacity>
       <View style={styles.wrapper}>

@@ -37,7 +37,7 @@ interface userProps {
 type navigationProps = {
   Login: undefined;
 };
-const HomeScreen = () => {
+export const HomeScreen = () => {
   const [userData, setUserData] = useState<userProps>({
     email: '',
     name:'',
@@ -159,35 +159,6 @@ const HomeScreen = () => {
       }
     });
   };
-  // const handleUpdateImage = async () => {
-  //   const userId = auth().currentUser?.uid;
-  //   if (userId && userImage) {
-  //     try {
-  //       // Update Firestore collection
-  //       setSpinner(true);
-  //       await firestore().collection('users').doc(userId).update({
-  //         profileImage: userImage,
-  //       });
-  //       // Upload new image to Firebase Storage
-  //       const imageName = `profileImages/profile_${userId}.jpg`;
-  //        // Adjust naming convention if needed
-  //       const storageRef = storage().ref().child(imageName);
-  //       const response = await fetch(userImage);
-  //       if (!response.ok) {
-  //         console.error('Image fetch failed with status:', response.status);
-  //         // Handle the error appropriately
-  //         return;
-  //       }
-  //       const blob = await response.blob();
-  //       await storageRef.put(blob);
-
-  //       console.log('Profile image updated successfully');
-  //     } catch (error) {
-  //       console.error('Error updating profile image:', error);
-  //       setSpinner(false)
-  //     }
-  //   }
-  // };
 
   const handleUpdateImage = async () => {
     const userId = auth().currentUser?.uid;
@@ -397,5 +368,3 @@ const HomeScreen = () => {
     </KeyboardAvoidingView>
   );
 };
-
-export default HomeScreen;
