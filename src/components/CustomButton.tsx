@@ -5,22 +5,21 @@ interface CustomizedButtonProps {
   title: string;
   onPress: () => void;
   backgroundColor:string;
+  marginTop:number;
 }
 
-const CustomizedButton: React.FC<CustomizedButtonProps> = ({ title,backgroundColor, onPress }) => (
-  <TouchableOpacity style={[styles.button, {backgroundColor:backgroundColor}]} disabled={backgroundColor ==='lightgray'?true:false}  onPress={onPress}>
+const CustomizedButton: React.FC<CustomizedButtonProps> = ({ title,backgroundColor, marginTop, onPress }) => (
+  <TouchableOpacity style={[styles.button, {backgroundColor:backgroundColor, marginTop:marginTop}]} disabled={backgroundColor ==='lightgray'?true:false}  onPress={onPress}>
     <Text style={styles.buttonText}>{title}</Text>
   </TouchableOpacity>
 );
 
 const styles = StyleSheet.create({
   button: {
-    // backgroundColor: 'orange', 
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 20,
     alignItems: 'center',
-    marginTop:30,
   },
   buttonText: {
     color: 'white',
