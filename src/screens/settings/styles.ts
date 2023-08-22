@@ -7,7 +7,7 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     flex: 1,
-    padding: 40,
+    padding: 30,
   },
   voiletHeading: {
     color: '#4B164C',

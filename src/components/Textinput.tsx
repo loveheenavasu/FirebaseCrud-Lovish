@@ -1,6 +1,12 @@
 // TextInputComponent.tsx
 import React from 'react';
-import { TextInput, StyleSheet, TextInputProps as RNTextInputProps } from 'react-native';
+import {
+  TextInput,
+  StyleSheet,
+  TextInputProps as RNTextInputProps,
+  Text,
+  View,
+} from 'react-native';
 
 interface TextInputProps extends RNTextInputProps {
   placeholder: string;
@@ -9,7 +15,7 @@ interface TextInputProps extends RNTextInputProps {
   editable?: boolean;
 }
 
-export const CustomTextInput: React.FC<TextInputProps> = ({
+export const Textinput: React.FC<TextInputProps> = ({
   placeholder,
   value,
   onChangeText,
@@ -17,19 +23,30 @@ export const CustomTextInput: React.FC<TextInputProps> = ({
   ...restProps
 }) => {
   return (
-    <TextInput
-      style={styles.input}
-      placeholder={placeholder}
-      placeholderTextColor="white"
-      value={value}
-      onChangeText={onChangeText}
-      editable={editable}
-      {...restProps}
-    />
+    <View>
+      <Text style={styles.text}>
+        {placeholder}
+        <Text style={{color: 'red', justifyContent: 'center'}}>*</Text>
+      </Text>
+      <TextInput
+        style={styles.input}
+        placeholder={placeholder}
+        placeholderTextColor="black"
+        value={value}
+        onChangeText={onChangeText}
+        editable={editable}
+        {...restProps}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  text: {
+    color: 'black',
+    fontWeight: '500',
+    marginLeft: 5,
+  },
   input: {
     height: 40,
     marginVertical: 10,
@@ -37,7 +54,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 10,
     paddingHorizontal: 10,
-    color: 'white',
+    color: 'black',
+    borderRadius: 32,
   },
 });
-

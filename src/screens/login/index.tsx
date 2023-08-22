@@ -1,72 +1,57 @@
 import {
   View,
-  TouchableOpacity,
   ToastAndroid,
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
 import React, {useState} from 'react';
-import CustomizedButton from '../../components/CustomButton';
+import CustomButton from '../../components/CustomButton';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
-import auth from '@react-native-firebase/auth';
 import Spinner from 'react-native-loading-spinner-overlay';
-import {CustomTextInput} from '../../components/Textinput';
-import {validateEmail} from '../../util/validation';
+import {Textinput} from '../../components/Textinput';
 import Label from '../../components/Label';
 import styles from './styles';
+import ImageHeader from '../../components/ImageHeader';
+import {navigationProps} from '../../components/type';
+import {handleLogin} from '../../apiconfig/firebaseapi';
 
 interface userProps {
   email: string;
   password: string;
 }
-
-type navigationProps = {
-  Register: undefined;
-  Home: undefined;
-};
-
 export const LoginScreen = () => {
   const [userData, setUserData] = useState<userProps>({
-    email: '',
-    password: '',
+    email: 'lovish@gmail.com',
+    password: '123456',
   });
   const [error, setError] = useState<any>(null);
   const [spinner, setSpinner] = useState<boolean>(false);
   const navigation = useNavigation<NavigationProp<navigationProps>>();
 
-  const handleEmailChange = (text: string) => {
+  const handleFieldChange = (fieldName: keyof userProps, value: string) => {
     setError(null);
-    setUserData(prevUserData => ({...prevUserData, email: text}));
+    setUserData(prevUserData => ({...prevUserData, [fieldName]: value}));
   };
 
-  const handlePasswordChange = (text: string) => {
-    setError(null);
-    setUserData(prevUserData => ({...prevUserData, password: text}));
+  const handleSignup = () => {
+    navigation.navigate('Register');
   };
 
-  const handleLogin = () => {
-    // Perform your login logic here using the email and password state values
+  const handleLoginPressed = () => {
     const {email, password} = userData;
-    if (!email) {
-      setError('Please enter an email address.');
-      return;
-    }
-    if (!validateEmail(email)) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-    if (!password) {
-      setError('Please enter a password.');
-      return;
-    }
     console.log('Email:', email);
     console.log('Password:', password);
     setSpinner(true);
-    auth()
-      .signInWithEmailAndPassword(email, password)
-      .then(() => {
-        console.log('User account signed in!');
-        navigation.navigate('Home');
+
+    if (!email || !password) {
+      setError('Please enter an email address and password.');
+      setSpinner(false);
+      return;
+    }
+    setSpinner(true);
+    handleLogin(email, password)
+      .then((message: any) => {
+        navigation.navigate('Main');
         setUserData({
           email: '',
           password: '',
@@ -74,7 +59,7 @@ export const LoginScreen = () => {
         setSpinner(false);
         if (Platform.OS === 'android') {
           ToastAndroid.showWithGravityAndOffset(
-            'Logged in successfully!',
+            message,
             ToastAndroid.LONG,
             ToastAndroid.BOTTOM,
             25,
@@ -82,23 +67,9 @@ export const LoginScreen = () => {
           );
         }
       })
-      .catch((error: any) => {
-        if (error.code === 'auth/email-already-in-use') {
-          setError('That email address is already in use!');
-        }
-
-        if (error.code === 'auth/invalid-email') {
-          setError('That email address is invalid!');
-        }
-        if (error.code === 'auth/user-not-found') {
-          setError('That email address does not exist!');
-        }
-        if (error.code === 'auth/wrong-password') {
-          setError('Wrong password!');
-        }
+      .catch((errorMessage: any) => {
+        setError(errorMessage);
         setSpinner(false);
-
-        console.log(error);
       });
   };
   return (
@@ -106,32 +77,38 @@ export const LoginScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}>
       <Spinner visible={spinner} />
-      <TouchableOpacity
-        onPress={() => navigation.navigate('Register')}
-        style={{paddingVertical: 0, marginLeft: '80%'}}
-        >
-        <Label styles={{fontSize: 20, color: 'orange'}} title="Register" />
-      </TouchableOpacity>
       <View style={styles.wrapper}>
-        <Label styles={styles.orangeHeading} title={'LoginScreen'} />
-        <CustomTextInput
+        <ImageHeader
+          title="Let’s Sign You In"
+          marginTop={50}
+          marginBottom={50}
+        />
+        <Textinput
           placeholder="Email"
           value={userData.email}
           keyboardType="email-address"
-          onChangeText={handleEmailChange}
+          onChangeText={text => handleFieldChange('email', text)}
         />
-        <CustomTextInput
+        <Textinput
           placeholder="Password"
           value={userData.password}
           secureTextEntry
-          onChangeText={handlePasswordChange}
+          onChangeText={text => handleFieldChange('password', text)}
         />
         {error && <Label styles={styles.errorText} title={error} />}
-        <CustomizedButton
+        <CustomButton
           title="Login"
-          marginTop={30}
-          onPress={handleLogin}
-          backgroundColor="orange"
+          marginTop={20}
+          onPress={handleLoginPressed}
+          backgroundColor="#4B164C"
+          textColor="white"
+        />
+        <CustomButton
+          title="Signup"
+          marginTop={20}
+          onPress={handleSignup}
+          textColor="#4B164C"
+          backgroundColor="#fcf3fb"
         />
       </View>
     </KeyboardAvoidingView>
