@@ -1,5 +1,7 @@
+import {NavigationProp, useNavigation} from '@react-navigation/native';
 import React from 'react';
-import {Text, StyleSheet, View, Image} from 'react-native';
+import {Text, StyleSheet, View, Image, TouchableOpacity} from 'react-native';
+import {navigationProps} from './type';
 
 interface CustomizedHeader {
   title: string;
@@ -16,22 +18,33 @@ const ImageHeader: React.FC<CustomizedHeader> = ({
   marginTop,
   marginBottom,
 }) => (
-  <View style={{marginBottom: marginBottom, marginTop: marginTop}}>
+  <View
+    style={{
+      marginBottom: marginBottom,
+      marginTop: marginTop,
+      alignSelf: 'center',
+    }}>
     <Image source={require('../../assets/friendzy.png')} />
     <Text style={styles.text}>{title}</Text>
   </View>
 );
 
-export const Header: React.FC<Header> = ({marginTop, marginBottom}) => (
-  <View
-    style={[
-      styles.imageView,
-      {marginBottom: marginBottom, marginTop: marginTop},
-    ]}>
-    <Image source={require('../../assets/logo.png')} />
-    <Image source={require('../../assets/notification.png')} />
-  </View>
-);
+export const Header: React.FC<Header> = ({marginTop, marginBottom}) => {
+  const navigation = useNavigation<NavigationProp<navigationProps>>();
+
+  return (
+    <View
+      style={[
+        styles.imageView,
+        {marginBottom: marginBottom, marginTop: marginTop},
+      ]}>
+      <Image source={require('../../assets/logo.png')} />
+      <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
+        <Image source={require('../../assets/notification.png')} />
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   imageView: {

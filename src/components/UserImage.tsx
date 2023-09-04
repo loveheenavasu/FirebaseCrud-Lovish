@@ -1,26 +1,9 @@
-// UserImage.tsx
-
 import React, {useState} from 'react';
-import {
-  View,
-  Image,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  Pressable,
-} from 'react-native';
+import {View, Image, StyleSheet} from 'react-native';
 import CameraIcon from 'react-native-vector-icons/EvilIcons';
-import CrossIcon from 'react-native-vector-icons/Entypo';
-import CustomButton from './CustomButton';
-import {
-  launchCamera,
-  launchImageLibrary,
-  ImagePickerResponse,
-  CameraOptions,
-  MediaType,
-} from 'react-native-image-picker';
+import ImagePicker from './ImagePicker';
 interface UserImageProps {
-  source: string | unknown;
+  source: string | undefined;
   size: number;
   handleImageChange: (a: any) => void;
   update: boolean;
@@ -40,51 +23,6 @@ const UserImage: React.FC<UserImageProps> = ({
 
   const closeModal = () => {
     setModalVisible(false);
-  };
-  const handleGalleryOption = () => {
-    const options: CameraOptions = {
-      mediaType: 'photo' as MediaType,
-      includeBase64: false,
-      maxHeight: 2000,
-      maxWidth: 2000,
-    };
-
-    launchImageLibrary(options, (response: ImagePickerResponse) => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.errorMessage) {
-        console.log('Image picker error: ', response.errorMessage);
-      } else if (response.assets && response.assets.length > 0) {
-        const selectedImage = response.assets[0].uri;
-        console.log(selectedImage);
-        handleImageChange(selectedImage);
-        setModalVisible(false);
-      }
-    });
-    closeModal(); // Close the modal
-  };
-
-  const handleCameraIconPress = () => {
-    const options: CameraOptions = {
-      mediaType: 'photo' as MediaType,
-      includeBase64: false,
-      maxHeight: 2000,
-      maxWidth: 2000,
-    };
-
-    launchCamera(options, (response: ImagePickerResponse) => {
-      if (response.didCancel) {
-        console.log('User cancelled camera');
-      } else if (response.errorMessage) {
-        console.log('Camera Error: ', response.errorMessage);
-      } else if (response.assets && response.assets.length > 0) {
-        const selectedImage = response.assets[0].uri;
-        console.log(selectedImage);
-        handleImageChange(selectedImage);
-        setModalVisible(false);
-      }
-    });
-    closeModal();
   };
 
   const defaultProfileUrl =
@@ -112,37 +50,11 @@ const UserImage: React.FC<UserImageProps> = ({
           style={styles.cameraIcon}
         />
       )}
-      <Modal
-        animationType="slide"
-        transparent={true}
+      <ImagePicker
         visible={modalVisible}
-        onRequestClose={closeModal}>
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <CrossIcon
-              size={26}
-              onPress={closeModal}
-              name="cross"
-              color="#4B164C"
-              style={styles.cross}
-            />
-            <CustomButton
-              title="From Gallery"
-              marginTop={10}
-              onPress={handleGalleryOption} // Add your logic for gallery option
-              backgroundColor="#4B164C"
-              textColor="white"
-            />
-            <CustomButton
-              title="From Camera"
-              marginTop={10}
-              onPress={handleCameraIconPress} // Handle camera icon press
-              textColor="white"
-              backgroundColor="#4B164C"
-            />
-          </View>
-        </View>
-      </Modal>
+        onClose={closeModal}
+        onSelectImage={handleImageChange}
+      />
     </View>
   );
 };
@@ -165,25 +77,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 15,
     padding: 5,
-  },
-  centeredView: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 22,
-  },
-  modalView: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: 200,
-    width: 200,
-    backgroundColor: 'lightgray',
-  },
-  cross: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    borderWidth: 1,
   },
 });
 

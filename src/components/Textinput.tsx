@@ -13,6 +13,7 @@ interface TextInputProps extends RNTextInputProps {
   value: string;
   onChangeText: (text: string) => void;
   editable?: boolean;
+  label?: boolean;
 }
 
 export const Textinput: React.FC<TextInputProps> = ({
@@ -20,14 +21,17 @@ export const Textinput: React.FC<TextInputProps> = ({
   value,
   onChangeText,
   editable = true,
+  label,
   ...restProps
 }) => {
   return (
     <View>
-      <Text style={styles.text}>
-        {placeholder}
-        <Text style={{color: 'red', justifyContent: 'center'}}>*</Text>
-      </Text>
+      {label && (
+        <Text style={styles.text}>
+          {placeholder}
+          <Text style={{color: 'red', justifyContent: 'center'}}>*</Text>
+        </Text>
+      )}
       <TextInput
         style={styles.input}
         placeholder={placeholder}
@@ -56,5 +60,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     color: 'black',
     borderRadius: 32,
+    backgroundColor: '#fff',
+    justifyContent:'center',
   },
 });

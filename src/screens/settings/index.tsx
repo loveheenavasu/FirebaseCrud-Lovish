@@ -1,4 +1,4 @@
-import {View, Text, FlatList} from 'react-native';
+import {View, FlatList} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import UserImage from '../../components/UserImage';
 import {fetchUserData, signOutUser} from '../../apiconfig/firebaseapi';
@@ -7,14 +7,14 @@ import styles from './styles';
 import ItemCard from '../../components/ItemCard';
 import {CommonActions, NavigationProp, useNavigation} from '@react-navigation/native';
 import {navigationProps} from '../../components/type';
-import auth from '@react-native-firebase/auth';
 import CustomButton from '../../components/CustomButton';
 import Spinner from 'react-native-loading-spinner-overlay';
 const DATA = [
-  {id: 1, name: 'Edit Profile'},
+  {id: 0, name: 'Edit Profile'},
+  {id: 1, name: 'Change Interests'},
   {id: 2, name: 'Search criteria'},
   {id: 3, name: 'Go Upgrade Vip'},
-  {id: 4, name: 'Forget Password'},
+  {id: 4, name: 'Change Password'},
 ];
 interface userProps {
   name: string;
@@ -79,7 +79,7 @@ const SettingScreen = () => {
           update={false}
           handleImageChange={() => {}}
         />
-        <Label styles={styles.voiletHeading} title={name} />
+        <Label styles={styles.voiletHeading} selected={false} title={name} />
         <FlatList
           data={DATA}
           keyExtractor={item => item.id.toString()}

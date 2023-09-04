@@ -4,6 +4,8 @@ import {Image, StyleSheet, View} from 'react-native';
 import Heart from 'react-native-vector-icons/Ionicons';
 import Cross from 'react-native-vector-icons/Entypo';
 import Staro from 'react-native-vector-icons/AntDesign';
+
+
 function* range(start: number, end: number) {
   for (let i = start; i <= end; i++) {
     yield i;

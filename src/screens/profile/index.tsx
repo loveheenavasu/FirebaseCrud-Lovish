@@ -1,6 +1,5 @@
 import {
   View,
-  ToastAndroid,
   Alert,
   Platform,
   KeyboardAvoidingView,
@@ -11,28 +10,41 @@ import CustomButton from '../../components/CustomButton';
 import {Textinput} from '../../components/Textinput';
 import Spinner from 'react-native-loading-spinner-overlay';
 import styles from './styles';
-import Label from '../../components/Label';
 import UserImage from '../../components/UserImage';
 import {fetchUserData, updateUserData} from '../../apiconfig/firebaseapi';
+import DOBComponent from '../../components/DOB';
+import LocationPicker from '../../components/LocationPicker';
+import GenderPicker from '../../components/Gender';
+import { useToast } from '../../context/ToastContext';
+import BackHeader from '../../components/BackHeader';
 
 interface userProps {
   email: string;
   phone: string;
   name: string;
   userImage: string | undefined;
+  dob: string;
+  location: string;
+  gender: string;
+  bio: string;
 }
 export const ProfileScreen = () => {
+  const {showToast} = useToast();
+
   const [userData, setUserData] = useState<userProps>({
     email: '',
     name: '',
     phone: '',
     userImage: undefined,
+    dob: '',
+    location: '',
+    gender: '',
+    bio: '',
   });
-  const {email, name, phone, userImage} = userData;
+  const {email, name, phone, userImage, dob, location, gender, bio} = userData;
   const [update, setUpdate] = useState<boolean>(false);
   const [buttonColor, setButtonColor] = useState<string>('lightgray');
   const [spinner, setSpinner] = useState<boolean>(false);
-
   
   const handleFieldChange = (fieldName: keyof userProps, text: string) => {
     setUserData(prevData => ({
@@ -46,10 +58,14 @@ export const ProfileScreen = () => {
       .then(userData => {
         if (userData) {
           setUserData({
-            email: userData.email || '', // Initialize with default values
+            email: userData.email || '',
             name: userData.name || '',
             phone: userData.phone || '',
             userImage: userData.profileImage || undefined,
+            dob: userData.dob,
+            location: userData.location,
+            gender: userData.gender,
+            bio: userData.bio,
           });
         }
       })
@@ -71,18 +87,10 @@ export const ProfileScreen = () => {
       Alert.alert('Please enter your phone number.');
       return;
     }
-    updateUserData(name, phone, userImage)
+    updateUserData(name, phone, userImage, dob, location, gender, bio)
       .then(message => {
         setUpdate(false);
-        if (Platform.OS === 'android') {
-          ToastAndroid.showWithGravityAndOffset(
-            message,
-            ToastAndroid.LONG,
-            ToastAndroid.BOTTOM,
-            25,
-            50,
-          );
-        }
+        showToast(message,'success')
         console.log('User data updated successfully');
       })
       .catch(errorMessage => {
@@ -93,12 +101,21 @@ export const ProfileScreen = () => {
       });
   };
   useEffect(() => {
-    if (phone.length < 10 || !name) {
+    const allFieldsFilled =
+      !!userImage &&
+      !!name &&
+      !!phone &&
+      !!dob &&
+      !!location &&
+      !!gender &&
+      !!bio;
+
+    if (!allFieldsFilled) {
       setButtonColor('lightgray');
     } else {
       setButtonColor('#4B164C');
     }
-  }, [phone, name]);
+  }, [userImage, name, phone, dob, location, gender, bio]);
 
   const handleEdit = () => {
     setUpdate(true);
@@ -109,12 +126,9 @@ export const ProfileScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}>
       <Spinner visible={spinner} />
+      <BackHeader title={update ? 'Edit Profile' : 'Profile'} />
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <View style={styles.wrapper}>
-          <Label
-            styles={styles.voiletHeading}
-            title={update ? 'Edit Profile' : 'Profile'}
-          />
           <UserImage
             source={userImage}
             size={150}
@@ -141,13 +155,39 @@ export const ProfileScreen = () => {
             editable={update}
           />
 
+          <DOBComponent
+            userData={userData}
+            handleFieldChange={handleFieldChange}
+            update={update}
+          />
+
+          <LocationPicker
+            location={location}
+            update={update}
+            handleFieldChange={handleFieldChange}
+          />
+          <GenderPicker
+            gender={gender}
+            update={update}
+            handleFieldChange={handleFieldChange}
+          />
+
+          <Textinput
+            placeholder="Bio"
+            value={userData.bio}
+            onChangeText={text => handleFieldChange('bio', text)}
+            editable={update}
+            multiline
+            numberOfLines={4}
+          />
+
           {update ? (
             <CustomButton
               title="Update"
               onPress={handleUpdate}
               marginTop={20}
               backgroundColor={buttonColor}
-              textColor={phone.length >= 10 ? 'white' : 'black'}
+              textColor={buttonColor == 'lightgray' ? 'black' : 'white'}
             />
           ) : (
             <CustomButton

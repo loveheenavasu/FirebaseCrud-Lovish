@@ -1,36 +1,47 @@
-import {
-  View,
-  ToastAndroid,
-  Platform,
-  KeyboardAvoidingView,
-} from 'react-native';
+import {View, Platform, KeyboardAvoidingView} from 'react-native';
 import React, {useState} from 'react';
 import CustomButton from '../../components/CustomButton';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
 import Spinner from 'react-native-loading-spinner-overlay';
 import {Textinput} from '../../components/Textinput';
-import Label from '../../components/Label';
 import styles from './styles';
 import ImageHeader from '../../components/ImageHeader';
-import {navigationProps} from '../../components/type';
+import {navigationProps, validationProps} from '../../components/type';
 import {handleLogin} from '../../apiconfig/firebaseapi';
+import ErrorComponent from '../../components/ErrorComponent';
+import ForgotPassword from '../../components/ForgotPassword';
+import {useToast} from '../../context/ToastContext';
 
 interface userProps {
   email: string;
   password: string;
 }
+
 export const LoginScreen = () => {
+  const {showToast} = useToast();
+
   const [userData, setUserData] = useState<userProps>({
-    email: 'lovish@gmail.com',
-    password: '123456',
+    email: Platform.OS==='ios'? 'lovishchugh01@gmail.com' : 'lovish@gmail.com',
+    password: Platform.OS==='ios'? '1234567' : '123456',
   });
-  const [error, setError] = useState<any>(null);
+  const [validationError, setValidationError] = useState<validationProps>({
+    emailError: '',
+    passwordError: '',
+    unknownError: '',
+  });
+  const {emailError, passwordError, unknownError} = validationError;
   const [spinner, setSpinner] = useState<boolean>(false);
   const navigation = useNavigation<NavigationProp<navigationProps>>();
 
   const handleFieldChange = (fieldName: keyof userProps, value: string) => {
-    setError(null);
     setUserData(prevUserData => ({...prevUserData, [fieldName]: value}));
+  };
+
+  const handleError = (fieldName: keyof validationProps, value: string) => {
+    setValidationError(prevValidationData => ({
+      ...prevValidationData,
+      [fieldName]: value,
+    }));
   };
 
   const handleSignup = () => {
@@ -43,8 +54,13 @@ export const LoginScreen = () => {
     console.log('Password:', password);
     setSpinner(true);
 
-    if (!email || !password) {
-      setError('Please enter an email address and password.');
+    if (!email) {
+      handleError('emailError', 'Please enter an email address.');
+      setSpinner(false);
+      return;
+    }
+    if (!password) {
+      handleError('passwordError', 'Please enter a password.');
       setSpinner(false);
       return;
     }
@@ -57,18 +73,17 @@ export const LoginScreen = () => {
           password: '',
         });
         setSpinner(false);
-        if (Platform.OS === 'android') {
-          ToastAndroid.showWithGravityAndOffset(
-            message,
-            ToastAndroid.LONG,
-            ToastAndroid.BOTTOM,
-            25,
-            50,
-          );
-        }
+        showToast(message,'success');
       })
       .catch((errorMessage: any) => {
-        setError(errorMessage);
+        if (errorMessage == 'Please provide a valid email address.') {
+          console.log('i got n');
+          handleError('emailError', errorMessage);
+        } else {
+          console.log('i got run');
+
+          handleError('unknownError', errorMessage);
+        }
         setSpinner(false);
       });
   };
@@ -87,15 +102,26 @@ export const LoginScreen = () => {
           placeholder="Email"
           value={userData.email}
           keyboardType="email-address"
-          onChangeText={text => handleFieldChange('email', text)}
+          onChangeText={text => {
+            handleFieldChange('email', text);
+            handleError('emailError', '');
+            handleError('unknownError', '');
+          }}
         />
+        <ErrorComponent error={emailError} />
         <Textinput
           placeholder="Password"
           value={userData.password}
           secureTextEntry
-          onChangeText={text => handleFieldChange('password', text)}
+          onChangeText={text => {
+            handleFieldChange('password', text);
+            handleError('passwordError', '');
+            handleError('unknownError', '');
+          }}
         />
-        {error && <Label styles={styles.errorText} title={error} />}
+        <ErrorComponent error={passwordError} />
+        <ErrorComponent error={unknownError} />
+        <ForgotPassword onPress={() => navigation.navigate('ForgetPassword')} />
         <CustomButton
           title="Login"
           marginTop={20}
@@ -103,6 +129,7 @@ export const LoginScreen = () => {
           backgroundColor="#4B164C"
           textColor="white"
         />
+
         <CustomButton
           title="Signup"
           marginTop={20}
