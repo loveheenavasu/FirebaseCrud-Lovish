@@ -2,6 +2,7 @@ import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 import {validateEmail} from '../util/validation';
+import { Platform } from 'react-native';
 export interface UserData {
   email: string;
   name: string;
@@ -106,6 +107,34 @@ export const handleRegister = async (email: string, password: string) => {
       }
     }
   });
+};
+
+interface fetchOtherUserData {
+  uid: string;
+  name: string;
+  time: string;
+  profileImage: string;
+  location:string;
+  dob:string;
+  gender:string;
+  bio:string;
+}
+
+export const fetchOtherUsers = async (currentUserId: string): Promise<fetchOtherUserData[]> => {
+
+  const usersRef = firestore().collection('users');
+
+  try {
+    const querySnapshot = await usersRef.get();
+    const usersData: fetchOtherUserData[] = querySnapshot.docs
+      .map(doc => ({ uid: doc.id, ...doc.data() } as fetchOtherUserData))
+      .filter(user => user.uid !== currentUserId);
+
+    return usersData;
+  } catch (error) {
+    console.error('Error fetching other users:', error);
+    return [];
+  }
 };
 
 export const fetchUserData = () => {
@@ -262,9 +291,11 @@ export const sendChatMessage = async (
   name: string,
   newMessage: string,
   image: string,
+  documentUrl:string,
+  audioUrl:string,
 ) => {
   console.log('image', image !== '');
-  if (newMessage.trim() === '' && image.length === 0) {
+  if (newMessage.trim() === '' && image.length === 0 && documentUrl.length === 0 && audioUrl.length === 0) {
     return;
   }
   
@@ -280,6 +311,8 @@ export const sendChatMessage = async (
       text: newMessage,
       imageUrl: image,
       timestamp: firestore.FieldValue.serverTimestamp(),
+      documentUrl:documentUrl,
+      audioUrl:audioUrl,
     });
   
     console.log('message sent successfully.');
@@ -295,26 +328,30 @@ interface Message {
   name: string;
   videoUrl:string;
   imageUrl:string;
+  documentUrl:string;
   timestamp: any;
 }
 
-export const getChatMessages = (
-  chatId: string,
-  setMessageFunc: (messages: Message[]) => void,
-) => {
-  const chatRef = firestore()
+export const loadMessages = async (chatId: string,limit: number, startAfter?: any) => {
+  const messagesRef = firestore()
     .collection('chats')
     .doc(chatId)
     .collection('messages');
 
-  return chatRef.orderBy('timestamp').onSnapshot(querySnapshot => {
-    const messagesData: Message[] = [];
-    querySnapshot.forEach(doc => {
-      const messageData = doc.data() as Message;
-      messagesData.push(messageData);
-    });
-    setMessageFunc(messagesData);
+  let query = messagesRef.orderBy('timestamp', 'desc').limit(limit);
+
+  if (startAfter) {
+    query = query.startAfter(startAfter);
+  }
+
+  const querySnapshot = await query.get();
+  const messagesData: Message[] = [];
+  querySnapshot.forEach(doc => {
+    const messageData = doc.data() as Message;
+    messagesData.push(messageData);
   });
+
+  return messagesData; // Remove the reverse() to maintain the order
 };
 
 export const handleMediaUpload = async (imageUrl: string | undefined) => {
@@ -334,6 +371,59 @@ export const handleMediaUpload = async (imageUrl: string | undefined) => {
 
       await storageRef.put(blob);
       console.log('Image uploaded successfully');
+      
+      // Get the download URL if needed
+      const downloadUrl = await storageRef.getDownloadURL();
+      return downloadUrl;
+    } catch (error) {
+      console.log('Error uploading image:', error);
+    }
+  }
+};
+export const handleAudioUpload = async (imageUrl: string | undefined) => {
+  const type = Platform.OS==='ios'? 'm4a':'mp3';
+  if (imageUrl) {
+    try {
+      const imageName = `audio/${Date.now()}.${type}`;
+      const storageRef = storage().ref().child(imageName);
+
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = () => resolve(xhr.response as Blob);
+        xhr.onerror = () => reject(new TypeError('Network request failed'));
+        xhr.responseType = 'blob';
+        xhr.open('GET', imageUrl, true);
+        xhr.send(null);
+      });
+
+      await storageRef.put(blob);
+      console.log('Audio uploaded successfully');
+      
+      // Get the download URL if needed
+      const downloadUrl = await storageRef.getDownloadURL();
+      return downloadUrl;
+    } catch (error) {
+      console.log('Error uploading audio:', error);
+    }
+  }
+};
+export const handleDocsUpload = async (documentUrl: string | undefined) => {
+  if (documentUrl) {
+    try {
+      const documentName = `document/${Date.now()}.pdf`;
+      const storageRef = storage().ref().child(documentName);
+
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = () => resolve(xhr.response as Blob);
+        xhr.onerror = () => reject(new TypeError('Network request failed'));
+        xhr.responseType = 'blob';
+        xhr.open('GET', documentUrl, true);
+        xhr.send(null);
+      });
+
+      await storageRef.put(blob);
+      console.log('Document uploaded successfully');
       
       // Get the download URL if needed
       const downloadUrl = await storageRef.getDownloadURL();

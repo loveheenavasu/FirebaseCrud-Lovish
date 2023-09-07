@@ -1,35 +1,75 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import Swiper from 'react-native-deck-swiper';
-import {Image, StyleSheet, View} from 'react-native';
+import {Image, StyleSheet, Text, View} from 'react-native';
 import Heart from 'react-native-vector-icons/Ionicons';
 import Cross from 'react-native-vector-icons/Entypo';
 import Staro from 'react-native-vector-icons/AntDesign';
-
-
+import auth from '@react-native-firebase/auth';
+import {fetchOtherUsers} from '../apiconfig/firebaseapi';
+import Location from 'react-native-vector-icons/Ionicons'
+import { calculateAge } from '../util/age';
+import { scale } from '../util/screenSize';
 function* range(start: number, end: number) {
   for (let i = start; i <= end; i++) {
     yield i;
   }
 }
 
+interface UserData {
+  uid: string;
+  name: string;
+  time: string;
+  profileImage: string;
+  location:string;
+  dob:string;
+  bio:string;
+}
 const CardDecker: React.FC = () => {
-  const [cards] = useState<number[]>([...range(1, 50)]);
   const swiperRef = useRef<Swiper<number>>(null);
-  const imageUrl1 =
-    'https://images.unsplash.com/photo-1456082902841-3335005c3082?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1374&q=80';
-  const imageUrl2 =
-    'https://images.unsplash.com/photo-1692278265511-7c884556cd74?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=696&q=80';
-  const renderCard = (card: number, index: number) => {
+  const [currentUser, setCurrentUser] = useState<string>('');
+  const [otherUsers, setOtherUsers] = useState<UserData[]>([]);
 
+  const fetchUsers = async (currentUserId: string) => {
+    const usersData = await fetchOtherUsers(currentUserId);
+    setOtherUsers(usersData);
+  };
+  
+  useEffect(() => {
+    const user = auth().currentUser;
+    if (user) {
+      setCurrentUser(user.uid);
+      fetchUsers(user.uid);
+    }
+  }, []);
+  
+
+  const renderCard = (card: number, index: number) => {
+    const userData = otherUsers[index];
+    if (!userData) {
+      return null;
+    }
+    const age = calculateAge(userData.dob);
     return (
       <View style={styles.card}>
         <Image
           source={{
-            uri: index % 2 === 0 ? imageUrl1 : imageUrl2,
+            uri: userData.profileImage,
           }}
           style={styles.image}
           resizeMode="cover"
         />
+        <View style={styles.userData}>
+          <View style={styles.flexrow}>
+
+          <Text style={styles.userName}>{userData.name.toUpperCase()},</Text>
+          <Text style={styles.userInfo}>{age}</Text>
+          </View>
+          <View style={styles.flexrow}>
+          <Location name='location' size={20} color={'#EF5DA8'}/>
+          <Text style={styles.userInfo}>{userData.location}</Text>
+          </View>
+          <Text style={styles.userInfo}>{userData.bio}</Text>
+        </View>
         <View style={styles.flex}>
           <View style={styles.pinkBackground}>
             <Cross
@@ -37,7 +77,7 @@ const CardDecker: React.FC = () => {
               name="cross"
               size={30}
               color={'#fff'}
-              onPress={()=>swipeAction('left')}
+              onPress={() => swipeAction('left')}
             />
           </View>
           <View style={styles.pinkBackground}>
@@ -46,11 +86,17 @@ const CardDecker: React.FC = () => {
               name="heart-outline"
               size={30}
               color={'#fff'}
-              onPress={()=>swipeAction('right')}
+              onPress={() => swipeAction('right')}
             />
           </View>
           <View style={styles.pinkBackground}>
-            <Staro style={styles.icon} name="staro" size={30} color={'#fff'} onPress={()=>swipeAction('top')}/>
+            <Staro
+              style={styles.icon}
+              name="staro"
+              size={30}
+              color={'#fff'}
+              onPress={() => swipeAction('top')}
+            />
           </View>
         </View>
       </View>
@@ -61,11 +107,18 @@ const CardDecker: React.FC = () => {
     console.log(`on swiped ${type}`);
   };
 
-  const onSwipedAllCards = () => {
+  const onSwipedAllCards = async () => {
     // Handle swiped all cards
+    console.log('fsdfsd');
+    
+    const user = auth().currentUser;
+    if (user) {
+      setCurrentUser(user.uid);
+      await fetchUsers(user.uid);
+    }
   };
 
-  const swipeAction = (action:string) => {
+  const swipeAction = (action: string) => {
     switch (action) {
       case 'right':
         swiperRef.current?.swipeRight();
@@ -91,9 +144,11 @@ const CardDecker: React.FC = () => {
         onSwipedTop={() => onSwiped('top')}
         onSwipedBottom={() => onSwiped('bottom')}
         // onTapCard={swipeLeft}
-        cards={cards}
+        // cards={otherUsers}
+        cards={Array.from(range(0, otherUsers.length - 1))}
         // cardVerticalMargin={80}
         renderCard={renderCard}
+        // onSwipedAll={onSwipedAllCards}
         onSwipedAll={onSwipedAllCards}
         stackSize={3}
         stackSeparation={5}
@@ -216,9 +271,35 @@ const styles = StyleSheet.create({
     borderRadius: 19,
     borderWidth: 1,
   },
+  flexrow:{
+    flexDirection:'row',
+    alignItems:'center'
+  },
   icon: {
     padding: 4,
     justifyContent: 'center',
+  },
+  userData: {
+    position:'absolute',
+    flexDirection: 'column',
+    backgroundColor:'white',
+    padding:10,
+    bottom:20,
+    width:scale(150),
+    opacity:0.7,
+    alignItems:'center'
+  },
+  userName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    opacity:1
+
+  },
+  userInfo: {
+    fontSize: 16,
+    color: '#555',
+    opacity:1
+
   },
 });
 

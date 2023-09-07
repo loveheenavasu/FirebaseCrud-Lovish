@@ -4,25 +4,25 @@ import {
   Platform,
   Dimensions,
   FlatList,
+  Keyboard,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import styles from './styles';
 import ChatHeader from '../../components/ChatHeader';
 import {Textinput} from '../../components/Textinput';
-import Attachment from 'react-native-vector-icons/Entypo';
 import Send from 'react-native-vector-icons/Ionicons';
 import Camera from 'react-native-vector-icons/Feather';
-import Microphone from 'react-native-vector-icons/FontAwesome';
 import {scale} from '../../util/screenSize';
 import MessageCard from '../../components/MessageCard';
 import {
-  getChatMessages,
-  handleMediaUpload,
+  loadMessages,
   sendChatMessage,
 } from '../../apiconfig/firebaseapi';
 import ImagePicker from '../../components/ImagePicker';
 const {height} = Dimensions.get('window');
 import firestore from '@react-native-firebase/firestore';
+import SoundRecorder from '../../components/SoundRecorder';
+import DocPicker from '../../components/DocumentPicker';
 
 interface Message {
   sender: string;
@@ -30,8 +30,9 @@ interface Message {
   name: string;
   timestamp: any;
   imageUrl?: string | any;
+  documentUrl?: string | any;
+  audioUrl?: string | any;
 }
-
 const ChatDetailScreen = ({route}: any) => {
   const {name, image, currentuserId, otheruserId} = route.params;
   const [modalVisible, setModalVisible] = useState(false);
@@ -42,15 +43,12 @@ const ChatDetailScreen = ({route}: any) => {
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-
-  // useEffect(() => {
-  //   const unsubscribe = getChatMessages(chatId, setMessages);
-  //   return () => unsubscribe();
-  // }, [chatId]);
+  const limit = 10;
 
   const sendMessage = async () => {
-    sendChatMessage(chatId, currentuserId, name, newMessage, '');
+    sendChatMessage(chatId, currentuserId, name, newMessage, '', '', '');
     setNewMessage('');
+    Keyboard.dismiss();
   };
 
   const openModal = () => {
@@ -60,63 +58,44 @@ const ChatDetailScreen = ({route}: any) => {
   const closeModal = () => {
     setModalVisible(false);
   };
-  const limit = 10;
-
-  const handleImageChange = async (selectedImageUri: string) => {
-    console.log('fdsfsd');
-
-    try {
-      const imageUrl = await handleMediaUpload(selectedImageUri);
-      if (imageUrl !== undefined) {
-        sendChatMessage(chatId, currentuserId, name, '', imageUrl);
-      } else {
-        console.log('Image upload failed.');
-      }
-    } catch (error) {
-      console.log('Error uploading image:', error);
-    }
-  };
-  useEffect(() => {
-    const loadInitialMessages = async () => {
-      const initialMessages = await loadMessages(limit);
-      setMessages(initialMessages);
-    };
-
-    loadInitialMessages();
-  }, [chatId]);
-
   const loadMoreMessages = async () => {
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
-      const moreMessages = await loadMessages(limit, lastMessage.timestamp);
+      const moreMessages = await loadMessages(
+        chatId,
+        limit,
+        lastMessage.timestamp,
+      );
 
       if (moreMessages.length > 0) {
         setMessages(prevMessages => [...prevMessages, ...moreMessages]);
       }
     }
   };
-
-  const loadMessages = async (limit: number, startAfter?: any) => {
-    const messagesRef = firestore()
+  useEffect(() => {
+    const unsubscribe = firestore()
       .collection('chats')
       .doc(chatId)
-      .collection('messages');
+      .collection('messages')
+      .orderBy('timestamp', 'desc')
+      .limit(limit)
+      .onSnapshot(querySnapshot => {
+        const newRealTimeMessages: Message[] = [];
+        querySnapshot.forEach(doc => {
+          const messageData = doc.data() as Message;
+          newRealTimeMessages.push(messageData);
+        });
 
-    let query = messagesRef.orderBy('timestamp', 'desc').limit(limit);
+        newRealTimeMessages.sort((a, b) => b.timestamp - a.timestamp);
+        setMessages(newRealTimeMessages);
+      });
 
-    if (startAfter) {
-      query = query.startAfter(startAfter);
-    }
-
-    const querySnapshot = await query.get();
-    const messagesData: Message[] = [];
-    querySnapshot.forEach(doc => {
-      const messageData = doc.data() as Message;
-      messagesData.push(messageData);
-    });
-
-    return messagesData; // Remove the reverse() to maintain the order
-  };
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [chatId]);
 
   return (
     <View style={styles.container}>
@@ -139,20 +118,23 @@ const ChatDetailScreen = ({route}: any) => {
                 text={item.text}
                 timestamp={item.timestamp}
                 imageUrl={item.imageUrl}
+                documentUrl={item.documentUrl}
+                audioUrl={item.audioUrl}
               />
             );
           }}
           onEndReached={loadMoreMessages}
           onEndReachedThreshold={0.1}
+          inverted={true}
         />
         <ImagePicker
           visible={modalVisible}
           onClose={closeModal}
-          onSelectImage={imageUri => handleImageChange(imageUri)}
+          chatId={chatId} currentuserId={currentuserId} name={name}
         />
 
         <View style={styles.wrapper}>
-          <Attachment name="attachment" size={26} />
+          <DocPicker chatId={chatId} currentuserId={currentuserId} name={name} />
           <View style={styles.textinput}>
             <Textinput
               placeholder="Message"
@@ -164,13 +146,13 @@ const ChatDetailScreen = ({route}: any) => {
           </View>
           {newMessage === '' ? (
             <>
+              <SoundRecorder chatId={chatId} currentuserId={currentuserId} name={name} />
               <Camera
                 style={styles.icon}
                 name="camera"
                 size={26}
                 onPress={openModal}
               />
-              <Microphone style={styles.icon} name="microphone" size={26} />
             </>
           ) : (
             <Send

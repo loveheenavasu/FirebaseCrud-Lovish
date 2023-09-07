@@ -9,18 +9,39 @@ import {
   CameraOptions,
   MediaType,
 } from 'react-native-image-picker';
+import { handleMediaUpload, sendChatMessage } from '../apiconfig/firebaseapi';
 
 interface ImagePickerProps {
   visible: boolean;
   onClose: () => void;
-  onSelectImage: (imageUri: string) => void;
+  chatId: string;
+  currentuserId: string;
+  name: string;
 }
 
 const ImagePicker: React.FC<ImagePickerProps> = ({
   visible,
   onClose,
-  onSelectImage,
+  chatId,
+  currentuserId,
+  name
 }) => {
+
+
+  const handleImageChange = async (selectedImageUri: string) => {
+    console.log('fdsfsd');
+
+    try {
+      const imageUrl = await handleMediaUpload(selectedImageUri);
+      if (imageUrl !== undefined) {
+        sendChatMessage(chatId, currentuserId, name, '', imageUrl, '', '');
+      } else {
+        console.log('Image upload failed.');
+      }
+    } catch (error) {
+      console.log('Error uploading image:', error);
+    }
+  };
   const handleGalleryOption = () => {
     const options: CameraOptions = {
       mediaType: 'photo' as MediaType,
@@ -37,8 +58,8 @@ const ImagePicker: React.FC<ImagePickerProps> = ({
       } else if (response.assets && response.assets.length > 0) {
         const selectedImage = response.assets[0].uri;
         console.log(selectedImage);
-        if (onSelectImage) {
-          onSelectImage(selectedImage||'');
+        if (selectedImage) {
+          handleImageChange(selectedImage)
         }
         if (onClose) {
           onClose();
@@ -63,8 +84,8 @@ const ImagePicker: React.FC<ImagePickerProps> = ({
       } else if (response.assets && response.assets.length > 0) {
         const selectedImage = response.assets[0].uri;
         console.log(selectedImage);
-        if (onSelectImage) {
-          onSelectImage(selectedImage||'');
+        if (selectedImage) {
+          handleImageChange(selectedImage)
         }
         if (onClose) {
           onClose();

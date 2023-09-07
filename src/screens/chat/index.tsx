@@ -1,51 +1,37 @@
 import React, { useEffect, useState,FC } from 'react';
 import {View, FlatList} from 'react-native';
 import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
 import styles from './styles';
 import {Header} from '../../components/ImageHeader';
 import ChatCard from '../../components/ChatCard';
-
+import { fetchOtherUsers } from '../../apiconfig/firebaseapi';
 
 interface UserData {
   uid: string;
   name: string;
   time: string;
-  image: string;
+  profileImage: string;
 }
-
 
 const ChatScreen: FC = () => {
   const [currentUser, setCurrentUser] = useState<string>('');
   const [otherUsers, setOtherUsers] = useState<UserData[]>([]);
 
   useEffect(() => {
-    // Fetch current user's UID using Firebase Authentication
     const user = auth().currentUser;
     if (user) {
       setCurrentUser(user.uid);
-      fetchOtherUsers(user.uid);
+      fetchUsers(user.uid);
     }
   }, []);
 
-  const fetchOtherUsers = async (currentUserId: string) => {
-    const usersRef = firestore().collection('users');
-
-    try {
-      const querySnapshot = await usersRef.get();
-      const usersData: UserData[] = querySnapshot.docs
-        .map(doc => ({ uid: doc.id, ...doc.data() } as UserData))
-        .filter(user => user.uid !== currentUserId);
-
-      setOtherUsers(usersData);
-    } catch (error) {
-      console.error('Error fetching other users:', error);
-    }
+  const fetchUsers = async (currentUserId: string) => {
+    const usersData = await fetchOtherUsers(currentUserId);
+    setOtherUsers(usersData);
   };
 
   const renderItem = ({item}: any) => {
     // console.log(item);
-    
     return (
       <ChatCard
         name={item.name}
