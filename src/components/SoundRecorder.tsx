@@ -1,5 +1,4 @@
-// SoundRecorder.tsx
-import React, {useState, FC} from 'react';
+import React, {useState, FC, useCallback} from 'react';
 import {PermissionsAndroid, Platform, StyleSheet, TouchableOpacity} from 'react-native';
 import AudioRecorderPlayer, {
   AVEncoderAudioQualityIOSType,
@@ -12,7 +11,8 @@ import AudioRecorderPlayer, {
 import Microphone from 'react-native-vector-icons/FontAwesome';
 import Stop from 'react-native-vector-icons/Ionicons';
 
-import {handleAudioUpload, sendChatMessage} from '../apiconfig/firebaseapi';
+import { useAppDispatch } from '../services/redux/hooks';
+import { handleAudioUpload, sendChatMessage } from '../services/redux/chatSlice';
 
 const audioRecorderPlayer = new AudioRecorderPlayer();
 interface soundRecorderProps {
@@ -26,11 +26,11 @@ const SoundRecorder: FC<soundRecorderProps> = ({
   name,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
-
+  const dispatch = useAppDispatch();
   const [recordSecs, setrecordSecs] = useState(0);
   const [recordTime, setrecordTime] = useState('');
 
-  const onStartRecord = React.useCallback(async () => {
+  const onStartRecord = useCallback(async () => {
     setIsRecording(true);
 
     if (Platform.OS === 'android') {
@@ -75,40 +75,78 @@ const SoundRecorder: FC<soundRecorderProps> = ({
     });
     console.log('uri:', `${uri}`);
   }, []);
-  const onStopRecord = React.useCallback(async () => {
+  // const onStopRecord = useCallback(async () => {
+  //   const result = await audioRecorderPlayer.stopRecorder();
+  //   audioRecorderPlayer.removeRecordBackListener();
+  //   setrecordSecs(0);
+  //   console.log(result);
+  //   setIsRecording(false);
+  //   if (result) {
+  //     const audioDownloadURL = await handleAudioUpload(result);
+  //     if (audioDownloadURL) {
+  //       const resultAction = await dispatch(
+  //         sendChatMessage({
+  //           chatId,
+  //           currentuserId,
+  //           name,
+  //           newMessage: '',
+  //           image: '',
+  //           documentUrl: '',
+  //           audioUrl: audioDownloadURL,
+  //         }),
+  //       );
+  //       if (sendChatMessage.fulfilled.match(resultAction)) {
+  //         console.log('Audio send');
+  //       }
+  //     } else {
+  //       console.error('Failed to upload audio to Firebase Storage.');
+  //     }
+  //   } else {
+  //     console.error('No audio recorded.');
+  //   }
+  // }, []);
+  const stopAudioRecording = async () => {
     const result = await audioRecorderPlayer.stopRecorder();
     audioRecorderPlayer.removeRecordBackListener();
     setrecordSecs(0);
-    console.log(result);
     setIsRecording(false);
-    if (result) {
-      const audioDownloadURL = await handleAudioUpload(result);
-      if (audioDownloadURL) {
-        sendChatMessage(
-          chatId,
-          currentuserId,
-          name,
-          '',
-          '',
-          '',
-          audioDownloadURL,
-        );
+    return result;
+  };
+  
+  const onStopRecord = useCallback(async () => {
+    try {
+      const result = await stopAudioRecording();
+      if (result) {
+        const audioDownloadURL = await handleAudioUpload(result);
+        if (audioDownloadURL) {
+          await sendAudioMessage(audioDownloadURL);
+        }
       } else {
-        console.error('Failed to upload audio to Firebase Storage.');
+        console.error('No audio recorded.');
       }
-    } else {
-      console.error('No audio recorded.');
+    } catch (error) {
+      console.error('Error during audio recording:', error);
     }
-    playSound(result);
   }, []);
 
-  const playSound = async (audioUrl: any) => {
-    // ... (the rest of your playSound logic)
+  const sendAudioMessage = async (audioDownloadURL:string) => {
+    const resultAction = await dispatch(
+      sendChatMessage({
+        chatId,
+        currentuserId,
+        name,
+        newMessage: '',
+        image: '',
+        documentUrl: '',
+        audioUrl: audioDownloadURL,
+      })
+    );
+  
+    if (sendChatMessage.fulfilled.match(resultAction)) {
+      console.log('Audio sent');
+    }
   };
 
-  const onStopPlay = async () => {
-    // ... (the rest of your onStopPlay logic)
-  };
 
   return (
     <>

@@ -15,10 +15,10 @@ const styles = StyleSheet.create({
     color:'red'
   },
   marginTop:{
-    position:'absolute',
-    bottom:20,
+    marginTop:'auto',
     width:'90%',
     alignSelf:'center',
+    marginBottom:10
   },
   image:{
     width:scale(320),

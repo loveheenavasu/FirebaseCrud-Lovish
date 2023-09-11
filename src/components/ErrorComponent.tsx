@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Exclamationcircle from 'react-native-vector-icons/AntDesign';
 import Label from './Label';
+import { scale } from '../util/screenSize';
 
 interface ErrorComponentProps {
   error: string;
@@ -27,13 +28,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderRadius: 20,
     marginVertical: 8,
-    paddingHorizontal: 10,
+    width:'100%',
+    alignSelf:'center',
+    
   },
   icon:{
     marginRight: 10
   },
     errortext:{
-        color:'red'
+        color:'red',
+        fontSize:scale(13)
     }
 })
 export default ErrorComponent;

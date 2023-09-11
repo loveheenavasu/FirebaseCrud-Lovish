@@ -50,11 +50,17 @@ const UserImage: React.FC<UserImageProps> = ({
           style={styles.cameraIcon}
         />
       )}
-      <ImagePicker
+      {/* <ImagePicker
         visible={modalVisible}
         onClose={closeModal}
         onSelectImage={handleImageChange}
-      />
+      /> */}
+      <ImagePicker
+          visible={modalVisible}
+          onClose={closeModal}
+          onSelectImage={handleImageChange}
+          chatId={''} currentuserId={''} name={'true'}
+        />
     </View>
   );
 };

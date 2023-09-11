@@ -4,7 +4,8 @@ import auth from '@react-native-firebase/auth';
 import styles from './styles';
 import {Header} from '../../components/ImageHeader';
 import ChatCard from '../../components/ChatCard';
-import { fetchOtherUsers } from '../../apiconfig/firebaseapi';
+import { useAppDispatch } from '../../services/redux/hooks';
+import { fetchOtherUsers } from '../../services/redux/chatSlice';
 
 interface UserData {
   uid: string;
@@ -16,6 +17,7 @@ interface UserData {
 const ChatScreen: FC = () => {
   const [currentUser, setCurrentUser] = useState<string>('');
   const [otherUsers, setOtherUsers] = useState<UserData[]>([]);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const user = auth().currentUser;
@@ -25,9 +27,15 @@ const ChatScreen: FC = () => {
     }
   }, []);
 
-  const fetchUsers = async (currentUserId: string) => {
-    const usersData = await fetchOtherUsers(currentUserId);
-    setOtherUsers(usersData);
+  const fetchUsers = (currentUserId: string) => {
+    dispatch(fetchOtherUsers({currentUserId}))
+      .unwrap()
+      .then(usersData => {
+        setOtherUsers(usersData);
+      })
+      .catch(error => {
+        console.error('Error fetching other users:', error);
+      });
   };
 
   const renderItem = ({item}: any) => {

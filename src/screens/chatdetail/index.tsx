@@ -14,15 +14,13 @@ import Send from 'react-native-vector-icons/Ionicons';
 import Camera from 'react-native-vector-icons/Feather';
 import {scale} from '../../util/screenSize';
 import MessageCard from '../../components/MessageCard';
-import {
-  loadMessages,
-  sendChatMessage,
-} from '../../apiconfig/firebaseapi';
 import ImagePicker from '../../components/ImagePicker';
 const {height} = Dimensions.get('window');
 import firestore from '@react-native-firebase/firestore';
 import SoundRecorder from '../../components/SoundRecorder';
 import DocPicker from '../../components/DocumentPicker';
+import {useAppDispatch} from '../../services/redux/hooks';
+import {loadMessages, sendChatMessage} from '../../services/redux/chatSlice';
 
 interface Message {
   sender: string;
@@ -44,11 +42,31 @@ const ChatDetailScreen = ({route}: any) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const limit = 10;
+  const dispatch = useAppDispatch(); // Get the dispatch function from Redux
 
   const sendMessage = async () => {
-    sendChatMessage(chatId, currentuserId, name, newMessage, '', '', '');
-    setNewMessage('');
-    Keyboard.dismiss();
+    try {
+      const resultAction = await dispatch(
+        sendChatMessage({
+          chatId,
+          currentuserId,
+          name,
+          newMessage,
+          image: '', // Add the relevant image, document, and audio URLs here
+          documentUrl: '',
+          audioUrl: '',
+        })
+      );
+  
+      if (sendChatMessage.fulfilled.match(resultAction)) {
+        setNewMessage('');
+        Keyboard.dismiss();
+      } else {
+        console.log('message nhi gya');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
 
   const openModal = () => {
@@ -58,18 +76,19 @@ const ChatDetailScreen = ({route}: any) => {
   const closeModal = () => {
     setModalVisible(false);
   };
-  const loadMoreMessages = async () => {
+  const loadMoreMessages = () => {
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
-      const moreMessages = await loadMessages(
-        chatId,
-        limit,
-        lastMessage.timestamp,
-      );
-
-      if (moreMessages.length > 0) {
-        setMessages(prevMessages => [...prevMessages, ...moreMessages]);
-      }
+      dispatch(loadMessages({chatId, limit, startAfter: lastMessage.timestamp}))
+        .unwrap()
+        .then(moreMessages => {
+          if (moreMessages.length > 0) {
+            setMessages(prevMessages => [...prevMessages, ...moreMessages]);
+          }
+        })
+        .catch(error => {
+          console.error('Error loading more messages:', error);
+        });
     }
   };
   useEffect(() => {
@@ -130,11 +149,18 @@ const ChatDetailScreen = ({route}: any) => {
         <ImagePicker
           visible={modalVisible}
           onClose={closeModal}
-          chatId={chatId} currentuserId={currentuserId} name={name}
+          chatId={chatId}
+          currentuserId={currentuserId}
+          name={name}
+          onSelectImage={() => {}}
         />
 
         <View style={styles.wrapper}>
-          <DocPicker chatId={chatId} currentuserId={currentuserId} name={name} />
+          <DocPicker
+            chatId={chatId}
+            currentuserId={currentuserId}
+            name={name}
+          />
           <View style={styles.textinput}>
             <Textinput
               placeholder="Message"
@@ -146,7 +172,11 @@ const ChatDetailScreen = ({route}: any) => {
           </View>
           {newMessage === '' ? (
             <>
-              <SoundRecorder chatId={chatId} currentuserId={currentuserId} name={name} />
+              <SoundRecorder
+                chatId={chatId}
+                currentuserId={currentuserId}
+                name={name}
+              />
               <Camera
                 style={styles.icon}
                 name="camera"

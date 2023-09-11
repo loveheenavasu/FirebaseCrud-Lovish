@@ -9,7 +9,8 @@ import {
   CameraOptions,
   MediaType,
 } from 'react-native-image-picker';
-import { handleMediaUpload, sendChatMessage } from '../apiconfig/firebaseapi';
+import { useAppDispatch } from '../services/redux/hooks';
+import { handleMediaUpload, sendChatMessage } from '../services/redux/chatSlice';
 
 interface ImagePickerProps {
   visible: boolean;
@@ -17,6 +18,7 @@ interface ImagePickerProps {
   chatId: string;
   currentuserId: string;
   name: string;
+  onSelectImage: (selectedImageUri:string) => void;
 }
 
 const ImagePicker: React.FC<ImagePickerProps> = ({
@@ -24,22 +26,41 @@ const ImagePicker: React.FC<ImagePickerProps> = ({
   onClose,
   chatId,
   currentuserId,
-  name
+  name,
+  onSelectImage
 }) => {
-
-
+  const dispatch = useAppDispatch();
   const handleImageChange = async (selectedImageUri: string) => {
+    if(name==='true'){
+      onSelectImage(selectedImageUri)
+      return;
+    }
     console.log('fdsfsd');
 
+   
     try {
       const imageUrl = await handleMediaUpload(selectedImageUri);
       if (imageUrl !== undefined) {
-        sendChatMessage(chatId, currentuserId, name, '', imageUrl, '', '');
+        const resultAction = await dispatch(
+          sendChatMessage({
+            chatId,
+            currentuserId,
+            name,
+            newMessage: '',
+            image: imageUrl,
+            documentUrl: '',
+            audioUrl: '',
+          }),
+        );
+        if (sendChatMessage.fulfilled.match(resultAction)) {
+          console.log('Image send');
+        }
       } else {
         console.log('Image upload failed.');
       }
+      
     } catch (error) {
-      console.log('Error uploading image:', error);
+      console.error('Error sending message:', error);
     }
   };
   const handleGalleryOption = () => {

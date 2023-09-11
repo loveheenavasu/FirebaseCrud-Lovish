@@ -8,15 +8,17 @@ import {
 import React, {useEffect, useState} from 'react';
 import CustomButton from '../../components/CustomButton';
 import {Textinput} from '../../components/Textinput';
-import Spinner from 'react-native-loading-spinner-overlay';
 import styles from './styles';
 import UserImage from '../../components/UserImage';
-import {fetchUserData, updateUserData} from '../../apiconfig/firebaseapi';
 import DOBComponent from '../../components/DOB';
 import LocationPicker from '../../components/LocationPicker';
 import GenderPicker from '../../components/Gender';
-import { useToast } from '../../context/ToastContext';
+import {useToast} from '../../context/ToastContext';
 import BackHeader from '../../components/BackHeader';
+import {fetchUserData, updateUserData} from '../../services/redux/profileSlice';
+import {useAppDispatch, useAppSelector} from '../../services/redux/hooks';
+import Loader from '../../util/Loader';
+import {selectLoading, setLoading} from '../../services/redux/authSlice';
 
 interface userProps {
   email: string;
@@ -30,7 +32,6 @@ interface userProps {
 }
 export const ProfileScreen = () => {
   const {showToast} = useToast();
-
   const [userData, setUserData] = useState<userProps>({
     email: '',
     name: '',
@@ -44,17 +45,20 @@ export const ProfileScreen = () => {
   const {email, name, phone, userImage, dob, location, gender, bio} = userData;
   const [update, setUpdate] = useState<boolean>(false);
   const [buttonColor, setButtonColor] = useState<string>('lightgray');
-  const [spinner, setSpinner] = useState<boolean>(false);
-  
+  const dispatch = useAppDispatch();
+  const loading = useAppSelector(selectLoading);
+
   const handleFieldChange = (fieldName: keyof userProps, text: string) => {
     setUserData(prevData => ({
       ...prevData,
       [fieldName]: text,
     }));
   };
+
   useEffect(() => {
-    setSpinner(true);
-    fetchUserData()
+    dispatch(setLoading(true));
+    dispatch(fetchUserData())
+      .unwrap()
       .then(userData => {
         if (userData) {
           setUserData({
@@ -67,13 +71,15 @@ export const ProfileScreen = () => {
             gender: userData.gender,
             bio: userData.bio,
           });
+          dispatch(setLoading(false));
         }
       })
       .catch(error => {
         console.error(error);
+        dispatch(setLoading(false));
       })
       .finally(() => {
-        setSpinner(false);
+        dispatch(setLoading(false));
       });
   }, []);
 
@@ -87,19 +93,35 @@ export const ProfileScreen = () => {
       Alert.alert('Please enter your phone number.');
       return;
     }
-    updateUserData(name, phone, userImage, dob, location, gender, bio)
+    dispatch(setLoading(true));
+    dispatch(
+      updateUserData({
+        name,
+        phone,
+        userImage,
+        dob,
+        location,
+        gender,
+        bio,
+      }),
+    )
+      .unwrap()
       .then(message => {
+        console.log(message);
+        // Handle success
         setUpdate(false);
-        showToast(message,'success')
+        showToast(message, 'success');
         console.log('User data updated successfully');
       })
       .catch(errorMessage => {
-        console.log(errorMessage);
+        console.error(errorMessage);
       })
       .finally(() => {
-        setSpinner(false);
+    dispatch(setLoading(false));
+
       });
   };
+
   useEffect(() => {
     const allFieldsFilled =
       !!userImage &&
@@ -125,7 +147,7 @@ export const ProfileScreen = () => {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}>
-      <Spinner visible={spinner} />
+      <Loader Visible={loading} />
       <BackHeader title={update ? 'Edit Profile' : 'Profile'} />
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <View style={styles.wrapper}>

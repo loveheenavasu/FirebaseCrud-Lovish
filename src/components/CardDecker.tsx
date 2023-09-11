@@ -5,10 +5,11 @@ import Heart from 'react-native-vector-icons/Ionicons';
 import Cross from 'react-native-vector-icons/Entypo';
 import Staro from 'react-native-vector-icons/AntDesign';
 import auth from '@react-native-firebase/auth';
-import {fetchOtherUsers} from '../apiconfig/firebaseapi';
 import Location from 'react-native-vector-icons/Ionicons'
 import { calculateAge } from '../util/age';
 import { scale } from '../util/screenSize';
+import { fetchOtherUsers } from '../services/redux/chatSlice';
+import { useAppDispatch } from '../services/redux/hooks';
 function* range(start: number, end: number) {
   for (let i = start; i <= end; i++) {
     yield i;
@@ -28,10 +29,17 @@ const CardDecker: React.FC = () => {
   const swiperRef = useRef<Swiper<number>>(null);
   const [currentUser, setCurrentUser] = useState<string>('');
   const [otherUsers, setOtherUsers] = useState<UserData[]>([]);
+  const dispatch = useAppDispatch();
 
-  const fetchUsers = async (currentUserId: string) => {
-    const usersData = await fetchOtherUsers(currentUserId);
-    setOtherUsers(usersData);
+  const fetchUsers = (currentUserId: string) => {
+    dispatch(fetchOtherUsers({currentUserId}))
+      .unwrap()
+      .then(usersData => {
+        setOtherUsers(usersData);
+      })
+      .catch(error => {
+        console.error('Error fetching other users:', error);
+      });
   };
   
   useEffect(() => {

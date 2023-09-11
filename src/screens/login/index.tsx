@@ -2,15 +2,17 @@ import {View, Platform, KeyboardAvoidingView} from 'react-native';
 import React, {useState} from 'react';
 import CustomButton from '../../components/CustomButton';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
-import Spinner from 'react-native-loading-spinner-overlay';
 import {Textinput} from '../../components/Textinput';
 import styles from './styles';
 import ImageHeader from '../../components/ImageHeader';
 import {navigationProps, validationProps} from '../../components/type';
-import {handleLogin} from '../../apiconfig/firebaseapi';
 import ErrorComponent from '../../components/ErrorComponent';
 import ForgotPassword from '../../components/ForgotPassword';
 import {useToast} from '../../context/ToastContext';
+import {useAppDispatch, useAppSelector} from '../../services/redux/hooks';
+import Loader from '../../util/Loader';
+import {loginUser, selectLoading} from '../../services/redux/authSlice';
+import { validateEmail } from '../../util/validation';
 
 interface userProps {
   email: string;
@@ -19,10 +21,13 @@ interface userProps {
 
 export const LoginScreen = () => {
   const {showToast} = useToast();
+  const dispatch = useAppDispatch();
+  const loading = useAppSelector(selectLoading);
 
   const [userData, setUserData] = useState<userProps>({
-    email: Platform.OS==='ios'? 'lovishchugh01@gmail.com' : 'lovish@gmail.com',
-    password: Platform.OS==='ios'? '1234567' : '123456',
+    email:
+      Platform.OS === 'ios' ? 'lovishchugh01@gmail.com' : 'lovish@gmail.com',
+    password: Platform.OS === 'ios' ? '1234567' : '123456',
   });
   const [validationError, setValidationError] = useState<validationProps>({
     emailError: '',
@@ -30,7 +35,6 @@ export const LoginScreen = () => {
     unknownError: '',
   });
   const {emailError, passwordError, unknownError} = validationError;
-  const [spinner, setSpinner] = useState<boolean>(false);
   const navigation = useNavigation<NavigationProp<navigationProps>>();
 
   const handleFieldChange = (fieldName: keyof userProps, value: string) => {
@@ -48,50 +52,57 @@ export const LoginScreen = () => {
     navigation.navigate('Register');
   };
 
-  const handleLoginPressed = () => {
-    const {email, password} = userData;
-    console.log('Email:', email);
-    console.log('Password:', password);
-    setSpinner(true);
 
-    if (!email) {
-      handleError('emailError', 'Please enter an email address.');
-      setSpinner(false);
-      return;
-    }
-    if (!password) {
-      handleError('passwordError', 'Please enter a password.');
-      setSpinner(false);
-      return;
-    }
-    setSpinner(true);
-    handleLogin(email, password)
-      .then((message: any) => {
-        navigation.navigate('Main');
-        setUserData({
-          email: '',
-          password: '',
-        });
-        setSpinner(false);
-        showToast(message,'success');
-      })
-      .catch((errorMessage: any) => {
-        if (errorMessage == 'Please provide a valid email address.') {
-          console.log('i got n');
-          handleError('emailError', errorMessage);
-        } else {
-          console.log('i got run');
+const handleLoginPressed = () => {
+  setValidationError({
+    emailError: '',
+    passwordError: '',
+    unknownError: '',
+  })
+  const { email, password } = userData;
+  if (!email) {
+    handleError('emailError', 'Please enter an email address.');
+    return;
+  }
+  if (!password) {
+    handleError('passwordError', 'Please enter a password.');
+    return;
+  }
+  if (!validateEmail(email)) {
+    handleError('emailError', 'Please enter a valid email address.');
+    return;
+  }
 
-          handleError('unknownError', errorMessage);
-        }
-        setSpinner(false);
+  dispatch(loginUser({ email, password }))
+    .unwrap()
+    .then(() => {
+      setUserData({
+        email: 'sdf',
+        password: '',
       });
-  };
+      showToast('Logged in successfully', 'success');
+    })
+    .catch((error: any) => {
+      const errorMessage = error.message;
+      if (
+        errorMessage === 'Please provide a valid email address.' ||
+        errorMessage === 'That email address does not exist!'
+      ) {
+        console.log('i got n');
+        handleError('emailError', errorMessage);
+      } else {
+        console.log('i got run');
+        handleError('unknownError', errorMessage);
+      }
+    });
+};
+
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}>
-      <Spinner visible={spinner} />
+      <Loader Visible={loading} />
       <View style={styles.wrapper}>
         <ImageHeader
           title="Let’s Sign You In"

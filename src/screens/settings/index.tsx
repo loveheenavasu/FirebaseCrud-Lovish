@@ -1,14 +1,19 @@
 import {View, FlatList} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import UserImage from '../../components/UserImage';
-import {fetchUserData, signOutUser} from '../../apiconfig/firebaseapi';
 import Label from '../../components/Label';
 import styles from './styles';
 import ItemCard from '../../components/ItemCard';
-import {CommonActions, NavigationProp, useNavigation} from '@react-navigation/native';
-import {navigationProps} from '../../components/type';
 import CustomButton from '../../components/CustomButton';
-import Spinner from 'react-native-loading-spinner-overlay';
+import {useAppDispatch, useAppSelector} from '../../services/redux/hooks';
+import {
+  selectLoading,
+  setLoading,
+  signOutUser,
+} from '../../services/redux/authSlice';
+import {fetchUserData} from '../../services/redux/profileSlice';
+import {useFocusEffect} from '@react-navigation/native';
+import Loader from '../../util/Loader';
 const DATA = [
   {id: 0, name: 'Edit Profile'},
   {id: 1, name: 'Change Interests'},
@@ -26,51 +31,39 @@ const SettingScreen = () => {
     userImage: undefined,
   });
   const {name, userImage} = userData;
-  const [spinner, setSpinner] = useState<boolean>(false);
-
-  const navigation = useNavigation<NavigationProp<navigationProps>>();
-
+  const loading = useAppSelector(selectLoading);
+  const dispatch = useAppDispatch();
   const handleSignout = () => {
-    signOutUser()
-      .then(() => {
-        console.log('User signed out!');
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 1,
-            routes: [{ name: 'Login' }],
-          }),
-        );
-      })
-      .catch(error => {
-        console.error('Error signing out:', error);
-      });
+    dispatch(signOutUser());
   };
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(setLoading(true));
+      dispatch(fetchUserData())
+        .unwrap()
+        .then(userData => {
+          if (userData) {
+            setUserData({
+              name: userData.name || '',
+              userImage: userData.profileImage || undefined,
+            });
+          }
+      dispatch(setLoading(false))
 
-  useEffect(() => {
-    setSpinner(true);
-    fetchUserData()
-      .then(userData => {
-        if (userData) {
-          setUserData({
-            name: userData.name || '',
-            userImage: userData.profileImage || undefined,
-          });
-        }
-      })
-      .catch(error => {
-        console.error(error);
-      })
-      .finally(() => {
-        setSpinner(false);
-      });
-  }, []);
+        })
+        .catch(error => {
+          dispatch(setLoading(false));
 
+          console.error(error);
+        });
+    }, []),
+  );
   const renderListItem = ({item}: {item: {id: number; name: string}}) => {
     return <ItemCard name={item.name} />;
   };
   return (
     <View style={styles.container}>
-      <Spinner visible={spinner} />
+      <Loader Visible={loading} />
 
       <View style={styles.wrapper}>
         <UserImage

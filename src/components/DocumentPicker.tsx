@@ -1,9 +1,9 @@
-// DocumentPicker.tsx
 import React from 'react';
-import { TouchableOpacity } from 'react-native';
+import {TouchableOpacity} from 'react-native';
 import DocumentPicker from 'react-native-document-picker';
 import Attachment from 'react-native-vector-icons/Entypo';
-import { handleDocsUpload, sendChatMessage } from '../apiconfig/firebaseapi';
+import {handleDocsUpload, sendChatMessage} from '../services/redux/chatSlice';
+import {useAppDispatch} from '../services/redux/hooks';
 
 interface DocumentPickerProps {
   chatId: string;
@@ -11,10 +11,32 @@ interface DocumentPickerProps {
   name: string;
 }
 
-const DocPicker: React.FC<DocumentPickerProps> = ({ chatId, currentuserId, name }) => {
-    const sendDocumentMessage = async (documentURL: string) => {
-        sendChatMessage(chatId, currentuserId, name, '', '', documentURL, '');
-      };
+const DocPicker: React.FC<DocumentPickerProps> = ({
+  chatId,
+  currentuserId,
+  name,
+}) => {
+  const dispatch = useAppDispatch();
+  const sendDocumentMessage = async (documentURL: string) => {
+    try {
+      const resultAction = await dispatch(
+        sendChatMessage({
+          chatId,
+          currentuserId,
+          name,
+          newMessage: '',
+          image: '',
+          documentUrl: documentURL,
+          audioUrl: '',
+        }),
+      );
+      if (sendChatMessage.fulfilled.match(resultAction)) {
+        console.log('Document send');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  };
   const pickDocument = async () => {
     try {
       const result = await DocumentPicker.pick({

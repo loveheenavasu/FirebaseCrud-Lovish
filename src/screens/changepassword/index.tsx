@@ -1,17 +1,14 @@
-import {
-  View,
-  Image,
-  ScrollView,
-} from 'react-native';
+import {View, Image, ScrollView} from 'react-native';
 import React, {useState} from 'react';
 import Layout from '../../components/Layout';
 import styles from './styles';
 import {Textinput} from '../../components/Textinput';
 import CustomButton from '../../components/CustomButton';
 import ErrorComponent from '../../components/ErrorComponent';
-import Spinner from 'react-native-loading-spinner-overlay';
-import {changePassword} from '../../apiconfig/firebaseapi';
-import { useToast } from '../../context/ToastContext';
+import {useToast} from '../../context/ToastContext';
+import {useAppDispatch, useAppSelector} from '../../services/redux/hooks';
+import {changePassword, selectLoading} from '../../services/redux/authSlice';
+import Loader from '../../util/Loader';
 
 interface passwordProps {
   currentPassword: string;
@@ -27,6 +24,8 @@ interface validationProps {
 const ChangePassword = ({route}: any) => {
   const {change} = route.params;
   const {showToast} = useToast();
+  const dispatch = useAppDispatch();
+  const loading = useAppSelector(selectLoading)
 
   const [passwordData, setPasswordData] = useState<passwordProps>({
     currentPassword: '',
@@ -46,9 +45,11 @@ const ChangePassword = ({route}: any) => {
     unknownError,
     currentPasswordError,
   } = validationError;
-  const [spinner, setSpinner] = useState<boolean>(false);
 
   const handleFieldChange = (fieldName: keyof passwordProps, value: string) => {
+    handleError('confirmPasswordError', '');
+    handleError('passwordError', '');
+    handleError('unknownError', '');
     setPasswordData(prevUserData => ({...prevUserData, [fieldName]: value}));
   };
 
@@ -58,38 +59,44 @@ const ChangePassword = ({route}: any) => {
       [fieldName]: value,
     }));
   };
-  
 
+  
   const handleChangePassword = async (
     currentPassword: string,
     password: string,
   ) => {
-    setSpinner(true);
-    changePassword(currentPassword, password)
+    dispatch(
+      changePassword({
+        currentPassword,
+        password,
+      }),
+    )
+      .unwrap()
       .then(message => {
-        showToast(message, 'success')
+        console.log(message);
+        showToast(message, 'success');
         setPasswordData({
-          currentPassword:'',
-          password:'',
-          confirmpassword:''
-        })
+          currentPassword: '',
+          password: '',
+          confirmpassword: '',
+        });
       })
       .catch(error => {
-        console.log(error.code);
-        if (error.code === 'auth/wrong-password') {
+        // console.log(error);
+        
+        if (error.message === '[auth/wrong-password] The password is invalid or the user does not have a password.') {
           handleError('currentPasswordError', 'Wrong Old Password!');
-        } else if (error.code === 'auth/too-many-requests') {
+        } else if (error.message === '[auth/too-many-requests]') {
           handleError(
             'confirmPasswordError',
             'Too Many requests! Try after sometime',
           );
+        } else if(error.message === "[auth/weak-password] The given password is invalid.") {
+          handleError('unknownError', "Weak password!");
         } else {
-          handleError('unknownError', error.code);
+          handleError('unknownError', error.message);
         }
       })
-      .finally(() => {
-        setSpinner(false);
-      });
   };
 
   const handlePassword = () => {
@@ -122,7 +129,7 @@ const ChangePassword = ({route}: any) => {
 
   return (
     <Layout title="Change Password" header={true}>
-      <Spinner visible={spinner} />
+      <Loader Visible={loading} />
       <ScrollView
         contentContainerStyle={styles.scrollViewContent}
         horizontal={false}>
@@ -144,9 +151,7 @@ const ChangePassword = ({route}: any) => {
               label={true}
             />
           )}
-          {change && (
-            <ErrorComponent error={currentPasswordError} />
-          )}
+          {change && <ErrorComponent error={currentPasswordError} />}
           <Textinput
             placeholder="New Password"
             value={password}
@@ -174,17 +179,16 @@ const ChangePassword = ({route}: any) => {
           <ErrorComponent error={confirmPasswordError} />
           <ErrorComponent error={unknownError} />
         </View>
+        <View style={styles.marginTop}>
+          <CustomButton
+            title="Save"
+            marginTop={0}
+            onPress={handlePassword}
+            backgroundColor="#4B164C"
+            textColor="white"
+          />
+        </View>
       </ScrollView>
-
-      <View style={styles.marginTop}>
-        <CustomButton
-          title="Save"
-          marginTop={0}
-          onPress={handlePassword}
-          backgroundColor="#4B164C"
-          textColor="white"
-        />
-      </View>
     </Layout>
   );
 };

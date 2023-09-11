@@ -6,19 +6,36 @@ import ForgotPasswordCard from '../../components/ForgotPasswordCard';
 import CustomButton from '../../components/CustomButton';
 import ErrorComponent from '../../components/ErrorComponent';
 import Layout from '../../components/Layout';
-import { sendPasswordResetEmail } from '../../apiconfig/firebaseapi';
-import { useToast } from '../../context/ToastContext';
+import {useToast} from '../../context/ToastContext';
+import {useAppDispatch} from '../../services/redux/hooks';
+import {sendPasswordResetEmail} from '../../services/redux/authSlice';
 
 const ForgetPasswordScreen = () => {
   const {showToast} = useToast();
   const [email, setEmail] = useState<string>('lovishchugh01@gmail.com');
   const [error, setError] = useState<string>('');
-
+  const dispatch = useAppDispatch();
 
   const handleFieldChange = (text: any) => {
     setError('');
     setEmail(text);
   };
+  // const handleReset = () => {
+  //   console.log(email);
+  //   if (!email) {
+  //     setError('Please Enter email.');
+  //     return;
+  //   }
+
+  //   sendPasswordResetEmail(email)
+  //     .then(message => {
+  //       showToast(message,'success');
+  //       setEmail('')
+  //     })
+  //     .catch(error => {
+  //       showToast(error.message,'error');
+  //     });
+  // };
   const handleReset = () => {
     console.log(email);
     if (!email) {
@@ -26,13 +43,21 @@ const ForgetPasswordScreen = () => {
       return;
     }
 
-    sendPasswordResetEmail(email)
+    dispatch(sendPasswordResetEmail(email))
+      .unwrap()
       .then(message => {
-        showToast(message,'success');
-        setEmail('')
+        showToast(message, 'success');
+        setEmail('');
       })
       .catch(error => {
-        showToast(error.message,'error');
+        if (
+          error.message ===
+          '[auth/user-not-found] There is no user record corresponding to this identifier. The user may have been deleted.'
+        ){
+          showToast('User Not Found!', 'error');
+        } else{
+          showToast(error.message, 'error');
+        }
       });
   };
 
