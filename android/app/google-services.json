@@ -7,114 +7,6 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:171719846677:android:6db5d752fd857ebda6d71c",
-        "android_client_info": {
-          "package_name": "com.SecondApp"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "171719846677-08nfclpnk57h5vr8dqj7lctuuoii1o3d.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyD0PgzTZ7BQGHawyBWuUdpxSvqvOze_LQo"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "171719846677-08nfclpnk57h5vr8dqj7lctuuoii1o3d.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "171719846677-j9l3mpor37ti77e63nomaeej7hch3th6.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "org.reactjs.native.example.firebaseAuth"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:171719846677:android:77069955529a83f0a6d71c",
-        "android_client_info": {
-          "package_name": "com.firebaseAuth"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "171719846677-08nfclpnk57h5vr8dqj7lctuuoii1o3d.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyD0PgzTZ7BQGHawyBWuUdpxSvqvOze_LQo"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "171719846677-08nfclpnk57h5vr8dqj7lctuuoii1o3d.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "171719846677-j9l3mpor37ti77e63nomaeej7hch3th6.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "org.reactjs.native.example.firebaseAuth"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:171719846677:android:6d0d539ce01c397da6d71c",
-        "android_client_info": {
-          "package_name": "com.firebaseauth"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "171719846677-08nfclpnk57h5vr8dqj7lctuuoii1o3d.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyD0PgzTZ7BQGHawyBWuUdpxSvqvOze_LQo"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "171719846677-08nfclpnk57h5vr8dqj7lctuuoii1o3d.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "171719846677-j9l3mpor37ti77e63nomaeej7hch3th6.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "org.reactjs.native.example.firebaseAuth"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
         "mobilesdk_app_id": "1:171719846677:android:2a37a4e014d04466a6d71c",
         "android_client_info": {
           "package_name": "com.secondapp"
@@ -122,7 +14,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "171719846677-08nfclpnk57h5vr8dqj7lctuuoii1o3d.apps.googleusercontent.com",
+          "client_id": "171719846677-v2hi0qrsoptfft9p3cg6fco3lch40hio.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.secondapp",
+            "certificate_hash": "f813431011eb8ecc6a2afaf795be32f11f99d5b2"
+          }
+        },
+        {
+          "client_id": "171719846677-bf6kuj4vbn6ii72uci4skt2t2c4qft3b.apps.googleusercontent.com",
           "client_type": 3
         }
       ],

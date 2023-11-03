@@ -121,7 +121,7 @@ const ChatDetailScreen = ({route}: any) => {
       <ChatHeader title={name} image={image} activeColor="#2BEF83" />
       <KeyboardAvoidingView
         keyboardVerticalOffset={
-          Platform.OS === 'ios' && height > 700 ? scale(10) : 20
+          Platform.OS === 'ios' && height > 700 ? scale(60) : 20
         }
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{justifyContent: 'flex-end', flex: 1}}>

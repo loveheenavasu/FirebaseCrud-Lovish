@@ -1,0 +1,25 @@
+<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.171719846677-p5altk3fpga021dv7dt7fi3fcpgk9ujq</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+		</dict>
+	</array>
+	<key>FacebookAppID</key>
+	<string>317481850831682</string>
+	<key>FacebookClientToken</key>
+	<string>5c00951ce5587433ef09cb8adfadcbac</string>
+	<key>FacebookDisplayName</key>
+	<string>Friendzy</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>fbapi</string>
+		<string>fb-messenger-share-api</string>
+	</array>    
+
+    <key>LSApplicationCategoryType</key>
+	<string></string>

@@ -2,10 +2,30 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fb317481850831682</string>
+			</array>
+		</dict>
+	</array>
+	<key>FacebookAppID</key>
+	<string>317481850831682</string>
+	<key>FacebookClientToken</key>
+	<string>5c00951ce5587433ef09cb8adfadcbac</string>
+	<key>FacebookDisplayName</key>
+	<string>Friendzy</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>fbapi</string>
+		<string>fb-messenger-share-api</string>
+	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app requires access to the photo library.</string>
-  <key>NSMicrophoneUsageDescription</key>
-  <string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>
     Give $(PRODUCT_NAME) permission to use your microphone. Your record wont be shared without your permission.
   </string>
 	<key>NSDocumentDirectoryUsageDescription</key>
@@ -52,7 +72,7 @@
 		<string>AntDesign.ttf</string>
 		<string>Entypo.ttf</string>
 		<string>EvilIcons.ttf</string>
-    <string>FontAwesome.ttf</string>
+		<string>FontAwesome.ttf</string>
 		<string>Feather.ttf</string>
 		<string>Foundation.ttf</string>
 		<string>Ionicons.ttf</string>
